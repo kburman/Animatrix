@@ -1,0 +1,14 @@
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\bin\Debug\Tester.exe.config
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\bin\Debug\Tester.exe
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\bin\Debug\Tester.pdb
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\bin\Debug\Animatrix.dll
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\bin\Debug\Animatrix.pdb
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.csprojResolveAssemblyReference.cache
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.Properties.Resources.resources
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.csproj.GenerateResource.Cache
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.exe
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.pdb
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.Screener_test.resources
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.Test.resources
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.Demo.AnimatedImageDisplay.resources
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Tester\obj\Debug\Tester.Demo.ButtonAnim.resources

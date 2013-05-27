@@ -1,0 +1,7 @@
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\obj\Debug\Animatrix.csprojResolveAssemblyReference.cache
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\bin\Debug\Animatrix.dll
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\bin\Debug\Animatrix.pdb
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\obj\Debug\Animatrix.dll
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\obj\Debug\Animatrix.pdb
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\obj\Debug\Animatrix.csproj.GenerateResource.Cache
+C:\Users\admin\Desktop\Animatix\Code\C#\Animatrix\Animatrix\obj\Debug\Animatrix.Animator.resources
