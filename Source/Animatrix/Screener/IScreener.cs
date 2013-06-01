@@ -12,38 +12,30 @@ namespace Animatrix.Screener
         /// <summary>
         /// Screener is in Postion and ready to display animation.
         /// </summary>
-         Boolean Ready { get; set; }
+         Boolean Ready { get; }
         /// <summary>
         /// Image which is being currently displayed on the screener.
         /// </summary>
          Bitmap imageToPaint { get; set; }
         /// <summary>
-        /// Should the host should be visible after the animation is completed.
+        /// Should the otherhost should be visible after the animation is completed.
         /// </summary>
          Boolean HostVisible_afterAnimation { get; set; }
         /// <summary>
         /// 
         /// </summary>
-         Point HostRelativeLocation { get; set; }
+         Point HostRelativeLocation { get;  }
         /// <summary>
         /// 
         /// </summary>
-         Point  HostLocation { get; set; }
-        /// <summary>
-        /// Image of area coverd by the control whithout it.
-        /// </summary>
-         Bitmap Foreground { get; set; }
-        /// <summary>
-        /// Image of control.
-        /// </summary>
-         Bitmap Background { get; set; }
+         Point  HostLocation { get;  }
 
         /// <summary>
         /// call the Refresh() method of Screener.
         /// </summary>
          void DrawAgain();
         /// <summary>
-        /// Screener take the postion in front of host to show the animation.
+        /// Screener take the postion in front of otherhost to show the animation.
         /// </summary>
          void coverTheHost();
         /// <summary>
@@ -52,17 +44,17 @@ namespace Animatrix.Screener
         /// </summary>
          void leaveScreen();
         /// <summary>
-        /// set extra surrounding space around the host which is required to show animation
+        /// set extra surrounding space around the otherhost which is required to show animation
         /// such Blink animation required extra space around.
         /// </summary>
          void setPadding(Padding pad);
         /// <summary>
-        /// returns a fresh background image.
+        /// returns animation fresh background image.
         /// </summary>
         /// <returns></returns>
          Bitmap getBackground();
         /// <summary>
-        /// returns a fresh foreground image.
+        /// returns animation fresh foreground image.
         /// </summary>
         /// <returns></returns>
          Bitmap getForeground();
@@ -78,16 +70,13 @@ namespace Animatrix.Screener
          Size getSize();
 
         /// <summary>
-        /// Update the background and foreground image
-        /// </summary>
-         void update();
-
-        /// <summary>
         /// Similar to dispose() method;
         /// </summary>
          void cleanMemoryFootprint();
 
          Object getHost();
+
+         
 
 
 

@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace Animatrix.Screener
 {
-  public   class ControlScreener :Control,IScreener,IDisposable 
+    public class Reflector : Control, IScreener
     {
-      
+
         private bool ready = false;
         public  bool Ready
         {
@@ -66,7 +66,7 @@ namespace Animatrix.Screener
 
 
         private Control _host = null;
-        public ControlScreener(Control host)
+        public Reflector(Control host)
         {
             if (host == null) return;
             if (host.IsDisposed) return;
@@ -78,8 +78,25 @@ namespace Animatrix.Screener
             _host.SizeChanged += _host_SizeChanged;
             _host.LocationChanged += _host_LocationChanged;
             this.Paint += ControlScreener_Paint;
+            //this._host.Paint += _host_Paint;
+
             
         }
+
+        //void _host_Paint(object sender, PaintEventArgs e)
+        //{
+        //    lock (foregroundImage)
+        //    {
+        //        foregroundImage.Dispose();
+        //        foregroundImage = null;
+        //    }
+
+        //    lock (background)
+        //    {
+        //        background.Dispose();
+        //        background = null;
+        //    }
+        //}
 
 
         void ControlScreener_Paint(object sender, PaintEventArgs e)
@@ -136,11 +153,15 @@ namespace Animatrix.Screener
                 return;
             if (_host.IsDisposed)
                 return;
+            this._host.Visible = true;
             int i = _host.Parent.Controls.GetChildIndex(_host);
             this.Parent = _host.Parent;
             _host.Parent.Controls.SetChildIndex(this, i);
             ready = true;
-            this._host.Visible = false;
+
+            Region rg = new Region();
+            rg.Exclude(new Rectangle(HostRelativeLocation, _host.Size));
+            this.Region = rg;
         }
 
         public void leaveScreen()
@@ -171,15 +192,15 @@ namespace Animatrix.Screener
                                _host.Height + pad.Top + pad.Bottom);
             _rLoc  = new Point(Math.Abs(this.Location.X - _host.Location.X),
                                Math.Abs(this.Location.Y - _host.Location.Y));
+            BackColor = Color.Red ;
         }
 
 
-        private Bitmap background = null;
+         
         public Bitmap getBackground()
         {
-            if (background == null)
-            {
-                if (_host == null)
+            Bitmap background = null;
+           if (_host == null)
                     return null;
                 if (_host.IsDisposed)
                     return null;
@@ -204,11 +225,9 @@ namespace Animatrix.Screener
                         }
                 }
                 g.Dispose();
-            }     
+               
           return background  ;
         }
-
-
 
         [DllImport("user32.dll")]
         public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
@@ -237,20 +256,51 @@ namespace Animatrix.Screener
             }
             return pImage;
         }
-        private Bitmap foregroundImage = null;
+
+        private bool lastCapWinIsBalnk = false;
         public Bitmap getForeground()
         {
-            if (foregroundImage == null)
+            if (lastCapWinIsBalnk )
             {
-                if (_host != null && !_host.IsDisposed)
-                {
-                    foregroundImage = new Bitmap(_host.Width, _host.Height);
-                    _host.DrawToBitmap(foregroundImage, _host.DisplayRectangle);
-                }
+                return (Bitmap)CapWinBitBlt(_host.Handle);
             }
-            return foregroundImage;
-           
-           
+            var img =(Bitmap) CapWin(_host.Handle);
+            if (IsBlank(img))
+            {
+                lastCapWinIsBalnk = true;
+                return (Bitmap)CapWinBitBlt(_host.Handle);
+            }
+            else
+                return img;
+        }
+
+        private bool IsBlank(Bitmap bmp)
+        {
+            // Lock the bitmap's bits.  
+            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            // Get the address of the first line.
+            IntPtr ptr = bmpData.Scan0;
+
+            // Declare an array to hold the bytes of the bitmap.
+            int bytes = bmpData.Stride * bmp.Height;
+            byte[] rgbValues = new byte[bytes];
+
+            // Copy the RGB values into the array.
+            Marshal.Copy(ptr, rgbValues, 0, bytes);
+
+            // Scanning for non-zero bytes
+            bool allBlack = true;
+            for (int index = 0; index < rgbValues.Length; index++)
+                if (rgbValues[index] != 0)
+                {
+                    allBlack = false;
+                    break;
+                }
+            // Unlock the bits.
+            bmp.UnlockBits(bmpData);
+            return allBlack;
         }
 
         public Size getHostSize()
@@ -279,49 +329,22 @@ namespace Animatrix.Screener
                 _host = null;
             imageToPaint = null;
             pad = Padding.Empty;
-            if (foregroundImage != null )
-            {
-                try
-                { foregroundImage.Dispose(); }
-                catch (Exception)
-                { }
-            }
-            if (background  != null)
-            {
-                try
-                { background.Dispose(); }
-                catch (Exception)
-                { }
-            }
+            //if (foregroundImage != null )
+            //{
+            //    try
+            //    { foregroundImage.Dispose(); }
+            //    catch (Exception)
+            //    { }
+            //}
+            //if (background  != null)
+            //{
+            //    try
+            //    { background.Dispose(); }
+            //    catch (Exception)
+            //    { }
+            //}
         }
-         private bool IsBlank(Bitmap bmp)
-        {
-            // Lock the bitmap's bits.  
-            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
 
-            // Get the address of the first line.
-            IntPtr ptr = bmpData.Scan0;
-
-            // Declare an array to hold the bytes of the bitmap.
-            int bytes = bmpData.Stride * bmp.Height;
-            byte[] rgbValues = new byte[bytes];
-
-            // Copy the RGB values into the array.
-            Marshal.Copy(ptr, rgbValues, 0, bytes);
-
-            // Scanning for non-zero bytes
-            bool allBlack = true;
-            for (int index = 0; index < rgbValues.Length; index++)
-                if (rgbValues[index] != 0)
-                {
-                    allBlack = false;
-                    break;
-                }
-            // Unlock the bits.
-            bmp.UnlockBits(bmpData);
-            return allBlack;
-        }
         public object getHost()
         {
             return _host;

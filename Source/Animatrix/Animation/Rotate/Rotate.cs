@@ -10,85 +10,114 @@ namespace Animatrix.Animation
 {
     public class Rotate : IAnimation 
     {
-        public bool Started { get; set; }
-        public bool Completed { get; set; }
-        public int startFrame { get; set; }
-        public int currentFrame { get; set; }
-        public  int angle = 0;
-        public  int deltaAngle = 20;
-        private float middleX=float.NaN ;
-        private float middleY=float.NaN ;
+
+        public int angle = 0;
+        public int deltaAngle = 20;
+        private float middleX = float.NaN;
+        private float middleY = float.NaN;
         private PointF middlePt = Point.Empty;
         private bool _invert = false;
-        public  bool rotateAtCenter = true;
+        public bool rotateAtCenter = true;
 
-        public Rotate()
+
+        private bool _start = false;
+        public bool Started
         {
-            this.Started = false;
-            this.Completed = false;
-            this.startFrame = 0;
-            this.currentFrame = 0;
+            get
+            {
+                return _start;
+            }
+            set
+            {
+                return;
+            }
         }
+
+        private bool _completed = false;
+        public bool Completed
+        {
+            get
+            {
+                return _completed;
+            }
+            set
+            {
+                return;
+            }
+        }
+
+        public int startFrame { get; set; }
+
+
+        public int currentFrame { get; set; }
+
         public void cleanMemoryFootprint()
         {
-            return;
+
         }
 
         public Padding getPadding(System.Drawing.Size hostSize)
         {
-            if (rotateAtCenter)
-                return new Padding(Math.Max(hostSize.Height, hostSize.Width));
-            else
-                //return new Padding(hostSize.Width, hostSize.Height, 0, hostSize.Height);
-                return new Padding(0);
+            return new Padding(Math.Max(hostSize.Height,hostSize.Width));
         }
 
-        private void Invert() { _invert = !_invert; }
+        public  void Invert() { _invert = !_invert; }
 
-        public System.Drawing.Bitmap nextFrame(AnimationFrameArgs e)
+        Matrix mat=null ;
+        public void nextFrame(ref AnimationFrameArgs e)
         {
-            Bitmap bit = new Bitmap(e.ScreenerSize.Width, e.ScreenerSize.Height);
-            Graphics g = Graphics.FromImage(bit);
-            g.DrawImage(e.Background, Point.Empty);
-            if (middleX.Equals(float.NaN) || middleY.Equals(float.NaN))
+
+            if (currentFrame >= startFrame )
             {
-                if (rotateAtCenter)
+                var bck = e.Background;
+                var frg = e.Forerground;
+
+                // Draw Background
+                e.graphics.DrawImageUnscaled(bck, Point.Empty);
+                //
+
+                // Determine center 
+                if (middleX.Equals(float.NaN) || middleY.Equals(float.NaN))
                 {
-                    middleX = (e.ScreenerSize.Width / 2);
-                    middleY = (e.ScreenerSize.Height / 2);
-                    middlePt = new PointF(middleX, middleY);
+                    if (rotateAtCenter)
+                    {
+                        middleX = (e.ScreenerSize.Width / 2);
+                        middleY = (e.ScreenerSize.Height / 2);
+                        middlePt = new PointF(middleX, middleY);
+                    }
+                    else
+                    {
+                        middlePt = PointF.Empty;
+                        middleX = 0;
+                        middleY = 0;
+                        deltaAngle = 10;
+                        angle = 200;
+                    }
                 }
-                else
+
+
+                if (mat == null )
                 {
-                    middlePt = PointF.Empty;
-                    middleX = 0;
-                    middleY = 0;
-                    deltaAngle = 10;
-                    angle = 200;
-                    //Console.WriteLine("SET");
+                    mat = new Matrix();
                 }
-            }
-            
-            if (this.currentFrame >= this.startFrame)
-            {
-                Matrix mat = new Matrix();
+
+                mat.Reset();
+
                 mat.RotateAt(angle, middlePt);
-                if (angle >= 360) Completed = true;
-                angle += deltaAngle;
-                //Console.WriteLine(angle + " = " + deltaAngle);
-                if (_invert) mat.Invert();
 
                 
-              
-                g.Transform = mat;
-                g.DrawImage(e.Forerground, e.Location);
+                angle += deltaAngle;
+
+                if (_invert) mat.Invert();
+
+
+
+                e.graphics .Transform = mat;
+                e.graphics .DrawImage(frg , e.Location);
 
             }
-
-            g.Flush();
-            g.Dispose();
-            this.currentFrame += 1;
-            return bit;
+            currentFrame += 1;
+            if (angle >= 360) _completed  = true;
         }
     }
 }

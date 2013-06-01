@@ -6,16 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Animatrix.Animation
+namespace Animatrix.Animation.Slide
 {
-    public enum Direction
-    {
-        Left = 0,
-        Top = 1,
-        Right = 2,
-        Bottom = 3
-    }
-   public  class SlideIn : IAnimation 
+    public class SlideIn : IAnimation
     {
         public bool Started { get; set; }
         public bool Completed { get; set; }
@@ -23,25 +16,25 @@ namespace Animatrix.Animation
         public int currentFrame { get; set; }
         public Direction From { get; set; }
         public int Distance { get; set; }
-       /// <summary>
-       /// Speed With with animation will move.
-       /// </summary>
+        /// <summary>
+        /// Speed With with animation will move.
+        /// </summary>
         public int Speed = 10;
-       /// <summary>
-       /// Change in Speed after every frame.
-       /// </summary>
+        /// <summary>
+        /// Change in Speed after every frame.
+        /// </summary>
         public int DeltaSpeed = 5;
 
         public int EaseIn = 50;
 
-        public SlideIn(int distance,Direction dir)
+        public SlideIn(int distance, Direction dir)
         {
             this.Started = false;
             this.Completed = false;
             this.startFrame = 0;
             this.currentFrame = 0;
-            this.Distance = distance ;
-            this.From = dir ;
+            this.Distance = distance;
+            this.From = dir;
         }
         public SlideIn()
         {
@@ -50,7 +43,7 @@ namespace Animatrix.Animation
             this.startFrame = 0;
             this.currentFrame = 0;
             this.Distance = 200;
-            this.From =  Direction.Left ; 
+            this.From = Direction.Left;
         }
 
 
@@ -71,44 +64,43 @@ namespace Animatrix.Animation
             }
         }
 
-        public System.Drawing.Bitmap nextFrame(AnimationFrameArgs e)
+        Matrix mat;
+        public void  nextFrame(ref AnimationFrameArgs e)
         {
-            Bitmap bit = new Bitmap(e.ScreenerSize.Width, e.ScreenerSize.Height);
-            Graphics g = Graphics.FromImage(bit);
-            g.DrawImage(e.Background , Point.Empty);
-            if (this.Distance <= this.EaseIn) { this.DeltaSpeed =0 ; this.Speed = 10; }
-
-            if (this.currentFrame >= this.startFrame)
+            if (currentFrame >= startFrame)
             {
-                Matrix mat = new Matrix();
+                Started = true;
+                var bck = e.Background;
+                var frg = e.Forerground;
+                e.graphics.DrawImageUnscaled(bck, Point.Empty);
+                if (this.Distance <= this.EaseIn) { this.DeltaSpeed = 0; this.Speed = 10; }
+                mat = new Matrix();
                 switch (this.From)
-                { 
-                    case Direction.Left :
+                {
+                    case Direction.Left:
                         mat.Translate(-this.Distance, 0);
                         break;
                     case Direction.Top:
-                         mat.Translate(0,-this.Distance);
+                        mat.Translate(0, -this.Distance);
                         break;
                     case Direction.Right:
-                        mat.Translate(this.Distance,0);
+                        mat.Translate(this.Distance, 0);
                         break;
                     case Direction.Bottom:
-                        mat.Translate(0,this.Distance);
+                        mat.Translate(0, this.Distance);
                         break;
                 }
-                g.Transform = mat;
+                e.graphics .Transform = mat;
                 this.Distance -= this.Speed;
                 this.Speed += this.DeltaSpeed;
-                g.DrawImage(e.Forerground, e.Location);
-                
+                e.graphics .DrawImage(frg , e.Location);
+                mat.Dispose();
+
             }
 
-
             if (this.Distance <= 0) this.Completed = true;
-            
-            g.Dispose();
+
             this.currentFrame += 1;
-            return bit;
         }
     }
 }

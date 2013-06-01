@@ -44,6 +44,6 @@ namespace Animatrix.Animation
         /// to use g.Draw(x,y,image)
         /// you should use g.Draw(0,0,image)
         ///</remarks>
-         Bitmap nextFrame(AnimationFrameArgs e);
+         void  nextFrame(ref AnimationFrameArgs e);
     }
 }

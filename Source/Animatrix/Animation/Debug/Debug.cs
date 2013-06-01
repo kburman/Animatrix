@@ -7,47 +7,63 @@ using System.Windows.Forms;
 
 namespace Animatrix.Animation
 {
-   public  class Debug : IAnimation
+    public class Debug :IAnimation 
     {
-        public bool Started { get; set; }
-        public bool Completed { get; set; }
+        private bool _start = false;
+        public bool Started
+        {
+            get
+            {
+                return _start;
+            }
+            set
+            {
+                return;
+            }
+        }
+
+        private bool _completed = false;
+        public bool Completed
+        {
+            get
+            {
+                return _completed;
+            }
+            set
+            {
+                return;
+            }
+        }
+
         public int startFrame { get; set; }
+
+
         public int currentFrame { get; set; }
 
-        public Debug()
-        {
-            this.Started = false;
-            this.Completed = false;
-            this.startFrame = 0;
-            this.currentFrame = 0;
-        }
         public void cleanMemoryFootprint()
         {
-            return;
+            
         }
 
-        private Size _hostSize = Size.Empty ;
         public Padding getPadding(System.Drawing.Size hostSize)
         {
-            _hostSize = hostSize;
-            return new Padding(20);
+            return new Padding(10);
         }
 
-
-        public System.Drawing.Bitmap nextFrame(AnimationFrameArgs e)
+        public void nextFrame(ref AnimationFrameArgs e)
         {
-            Bitmap bit = new Bitmap(e.ScreenerSize.Width, e.ScreenerSize.Height);
-            Graphics g = Graphics.FromImage(bit);
-            g.Clear(Color.Red);
-            g.DrawImage(e.Background  ,Point.Empty );
+            _start = true;
+            e.graphics.Clear(Color.Yellow);
+            var bck = e.Background;
+            var fr = e.Forerground;
 
-            g.DrawImage(e.Forerground, e.Location);
+            e.graphics.DrawImage(bck, Point.Empty);
+            e.graphics.DrawImage(fr, e.Location);
+            e.graphics.DrawString(currentFrame.ToString(), Form.DefaultFont, SystemBrushes.ActiveBorder, Point.Empty);
 
-            //g.DrawImage(e.Forerground, e.Location);
-            g.DrawString(this.currentFrame.ToString(), Form.DefaultFont, SystemBrushes.GrayText, PointF.Empty);
-            g.Dispose();
-            this.currentFrame += 1;
-            return bit;
+            currentFrame += 1;
+
+          
         }
     }
 }
