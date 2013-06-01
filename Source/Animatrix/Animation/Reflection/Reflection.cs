@@ -2,186 +2,162 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
 namespace Animatrix.Animation
 {
-    public class Reflection : IAnimation 
+
+    public class Reflection : IAnimation
     {
         public bool Started { get; set; }
         public bool Completed { get; set; }
         public int startFrame { get; set; }
         public int currentFrame { get; set; }
-        public Direction Position = Direction.Bottom;
+        private Color _color = Color.Black;
+        private Size _hostSize = Size.Empty;
+        private float _angle = float.NaN;
+
         /// <summary>
-        /// Sepration bettween Control and reflection.
+        /// Where will be reflection is to be Displayed.
+        /// Default is at Bottom
         /// </summary>
-        private int distance = 2;
+        public Direction Position { get { return _where; } set { _where = value; } }
+        private Direction _where = Direction.Bottom;
+
         /// <summary>
-        /// Opacity of Reflected Image
+        /// Distance Between the Reflection and actual control.
         /// </summary>
-        public int Reflectance = 230;
-        private  int Length = 50;
-        public bool AutoSize = true;
-        private Color _color;
-        public Reflection(Color BackColor,int len)
-        {
-            this.Started = false;
-            this.Completed = false;
-            this.startFrame = 0;
-            this.currentFrame = 0;
-            this._color = BackColor;
-            this.Length = len;
-        }
-        public Reflection(Color BackColor)
-        {
-            this.Started = false;
-            this.Completed = false;
-            this.startFrame = 0;
-            this.currentFrame = 0;
-            this._color = BackColor;
-        }
-        public void cleanMemoryFootprint()
-        {
-            return;
-        }
+        public int Distance { get { return _distance; } set { _distance = value; } }
+        private int _distance = 0;
 
-        private Size _hostSize = Size.Empty ;
-        public Padding getPadding(System.Drawing.Size hostSize)
-        {
-            _hostSize = hostSize;
-            if (AutoSize)
-                switch (Position)
-                {
-                    case Direction.Left:
-                        return new Padding(hostSize.Width , 0, 0, 0);
-                        break;
-                    case Direction.Top:
-                        return new Padding(0, hostSize.Height , 0, 0);
-                        break;
-                    case Direction.Right:
-                        return new Padding(0, 0, hostSize.Width , 0);
-                        break;
-                    case Direction.Bottom:
-                        return new Padding(0, 0, 0, hostSize.Height);
-                        break;
-                    default:
-                        return new Padding(Length);
-                        break;
-                }
-            else
-            switch (Position )
-            {
-                case Direction.Left:
-                    return new Padding(Length, 0, 0, 0);
-                    break;
-                case Direction.Top:
-                    return new Padding(0, Length, 0, 0);
-                    break;
-                case Direction.Right:
-                    return new Padding(0, 0, Length, 0);
-                    break;
-                case Direction.Bottom:
-                    return new Padding(0, 0, 0, Length);
-                    break;
-                default:
-                    return new Padding(Length);
-                    break;
-            }
-        }
-
-        private float angle = 90F; // 90F
-        public System.Drawing.Bitmap nextFrame(AnimationFrameArgs e)
-        {
-            Bitmap bit = new Bitmap(e.ScreenerSize.Width, e.ScreenerSize.Height);
-            Graphics g = Graphics.FromImage(bit);
-            g.DrawImage(e.Background  ,Point.Empty );
-            Point pt=Point.Empty ;
-            Matrix mat = new Matrix();
-            Rectangle imageRectangle = Rectangle.Empty  ;
-            LinearGradientBrush lbrush=null;
-            
-            switch (Position )
-            {
-                case Direction.Left:
-                     mat.Translate(-_hostSize.Width ,0);
-                    g.Transform = mat;
-                     // Draw Gradient
-                    imageRectangle = new Rectangle(0, 0, e.Forerground.Width, e.Forerground.Height);
-                    lbrush = new LinearGradientBrush(imageRectangle, _color  , Color.FromArgb(Reflectance,_color)  , 0F);
-                    g.DrawImage(e.Forerground, Point.Empty);
-                    
-                    g.FillRectangle(lbrush, 0, 0, e.Forerground.Width, e.Forerground.Height);
-                    break;
-                case Direction.Top:
-                    mat.Translate(0,-_hostSize.Height);
-                    g.Transform = mat;
-                     // Draw Gradient
-                    imageRectangle = new Rectangle(0, 0, e.Forerground.Width, e.Forerground.Height);
-                    lbrush = new LinearGradientBrush(imageRectangle, _color  , Color.FromArgb(Reflectance,_color)  , 90F);
-                    g.DrawImage(e.Forerground, Point.Empty);
-                    g.FillRectangle(lbrush, imageRectangle );
-                    break;
-                case Direction.Right:
-                    mat.Translate(_hostSize.Width  ,0);
-                    g.Transform = mat;
-                     // Draw Gradient
-                    imageRectangle = new Rectangle(0, 0, e.Forerground.Width, e.Forerground.Height);
-                    lbrush = new LinearGradientBrush(imageRectangle, _color  , Color.FromArgb(Reflectance,_color)  , 180F);
-                    g.DrawImage(e.Forerground, Point.Empty);
-                    g.FillRectangle(lbrush, 0, 0, e.Forerground.Width, e.Forerground.Height);
-                    break;
-                    break;
-                case Direction.Bottom:
-                    
-                    g.ScaleTransform(1F, -1F);
-                    g.TranslateTransform(0, -(e.ScreenerSize.Height + distance   )   );
-                    g.DrawImage(e.Forerground, e.Location);
-
-                    imageRectangle = new Rectangle(0, 0, e.Forerground.Width, e.Forerground.Height);
-                    lbrush = new LinearGradientBrush(imageRectangle, _color  , Color.FromArgb(255-Reflectance,_color)  , 90F);
-                    g.FillRectangle(lbrush, imageRectangle );
-
-
-
-
-
-
-
-
-                    //pt = new Point(0 , _hostSize.Height);
-                    //mat.RotateAt(180, pt);
-                    //mat.Translate(-e.Forerground.Width ,0 );
-                    
-                    //g.Transform = mat;
-                    //g.ScaleTransform(1, -1);
-                    //// Draw Gradient
-                    // imageRectangle = new Rectangle(0, 0, e.Forerground.Width, e.Forerground.Height);
-                    // lbrush = new LinearGradientBrush(imageRectangle, _color  , Color.FromArgb(Reflectance,_color)  , 90F);
-                    //g.DrawImage(e.Forerground, Point.Empty);
-                    //g.FillRectangle(lbrush, 0, 0, e.Forerground.Width, e.Forerground.Height);
-                    break;
-                default:
-                    break;
-            }
-
-            imageRectangle = Rectangle.Empty ;
-            pt = Point.Empty;
-            lbrush.Dispose();
-            lbrush = null;
-
-            g.Flush();
-            g.Dispose();
-            this.currentFrame += 1;
-            return bit;
-        }
-
+        /// <summary>
+        /// Set the Opacity of Reflected Image.
+        /// </summary>
+        public int Opacity { get { return _reflectance; } set { _reflectance = value; } }
+        private int _reflectance = 100;
 
   
 
-      
+
+        /// <summary>
+        /// Create a new instance of Reflection animation
+        /// </summary>
+        /// <param name="Backcolor">background color of host.parent</param>
+        public Reflection(Color Backcolor)
+        {
+            this.Started = true ;
+            this.Completed = false;
+            this.startFrame = 0;
+            this.currentFrame = 0;
+            this._angle = 0F;
+            this._color = Backcolor;
+        }
+
+        /// <summary>
+        /// Clean the memory used by this class.  
+        /// </summary>
+        /// <remarks >
+        /// Since it not uses to much vari
+        /// </remarks>
+        public void cleanMemoryFootprint()
+        {
+            _color = Color.Empty;
+            _hostSize = Size.Empty;
+            mat = null;
+            lbrush.Dispose();
+            lbrush = null;
+            imgrectangle = Rectangle.Empty;
+        }
+
+        /// <summary>
+        /// Used by Animation Manger .
+        /// </summary>
+        /// <param name="hostSize"></param>
+        /// <returns></returns>
+        public Padding getPadding(System.Drawing.Size hostSize)
+        {
+            _hostSize = hostSize;
+            switch (this.Position)
+            {
+                case Direction.Left:
+                    return new Padding(hostSize.Width+Distance , 0, 0, 0);
+                    break;
+                case Direction.Top:
+                    return new Padding(0, hostSize.Height + Distance, 0, 0);
+                    break;
+                case Direction.Right:
+                    return new Padding(0, 0, hostSize.Width + Distance, 0);
+                    break;
+                case Direction.Bottom:
+                    return new Padding(0, 0, 0, hostSize.Height + Distance);
+                    break;
+                default:
+                    return new Padding(20);
+                    break;
+            }
+        }
+
+        Matrix mat = null;
+        Rectangle imgrectangle = Rectangle.Empty;
+        LinearGradientBrush lbrush = null;
+        public void nextFrame(ref AnimationFrameArgs e)
+        {
+            var fr = e.Forerground;
+
+            // Inti Variables.
+            if (this.currentFrame == 0)
+            {
+                mat = new Matrix();
+                switch (this.Position)
+                {
+                    case Direction.Left:
+                        mat.Translate(-_hostSize.Width, 0);
+                        break;
+                    case Direction.Top:
+                        mat.Translate(0, -_hostSize.Height);
+                        break;
+                    case Direction.Right:
+                        mat.Translate(_hostSize.Width, 0);
+                        _angle = 270;
+                        break;
+                    case Direction.Bottom:
+                        mat.Dispose();
+                        mat = null;
+                        this._angle = 90F;
+                        break;
+                    default:
+                        break;
+                }
+                imgrectangle = new Rectangle(0, 0, _hostSize.Width, _hostSize.Height);
+                lbrush = new LinearGradientBrush(imgrectangle, _color, Color.FromArgb(255 - this.Opacity, _color), this._angle);
+            }
+
+
+            this.currentFrame += 1;
+
+            switch (this.Position)
+            {
+                case Direction.Left:
+                case Direction.Top:
+                case Direction.Right:
+                    e.graphics.Transform = mat;
+                    e.graphics.DrawImage(fr , Point.Empty);
+                    break;
+                case Direction.Bottom:
+                    e.graphics.ScaleTransform(1F, -1F);
+                    e.graphics.TranslateTransform(0, -(e.ScreenerSize.Height + _distance));
+                    e.graphics.DrawImage(fr, e.Location);
+                    break;
+            }
+            e.graphics.FillRectangle(lbrush, imgrectangle);
+
+            fr.Dispose();
+            fr = null;
+        }
+
+
+
     }
 }

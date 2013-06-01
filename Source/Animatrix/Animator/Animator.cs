@@ -1,142 +1,30 @@
-﻿
-using Animatrix.Animation;
+﻿using Animatrix.Animation;
 using Animatrix.Projectors;
 using Animatrix.Screener;
-using Animatrix.Screener.Reflection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Animatrix
+namespace Animatrix.Animator
 {
-    public enum Animtion
+    public class Animator :Component,IDisposable 
     {
-        Debug =0, // For debugin purpose.
-        SlideIn_FromLeft=1,
-        SlideIn_FromRight=2,
-        SlideIn_FromTop=3,
-        SlideIn_FromBottom=4,
-        SlideOut_ToLeft=5,
-        SlideOut_ToRight=6,
-        SlideOut_ToBottom=7,
-        SlideOut_ToTop=8,
-        Rotate_FromCenter=9
-    }
-  public   class Animator :Component
-    {
+
         private System.Windows.Forms.Timer timer1;
         private IContainer components;
-        List<IProjector> lst;
-
-        public  bool Started { get { return timer1.Enabled; } }
+        private List<IProjector> lst;
 
         public Animator()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             lst = new List<IProjector>();
             
         }
 
-        public void Start()
-        {
-            this.timer1.Start();
-        }
-        public void Pause()
-        {
-            this.timer1.Stop();
-        }
-      
-        private int _fps = 100;
-        public int FPS
-        {
-            get {
-                return _fps; 
-            }
-            set {
-                timer1.Interval =  1000/value ;
-                _fps = value;
-            }
-        }
-
-        public void Add(IProjector pj)
-        {
-            lock (lst)
-            {
-                bool exits = false;
-                for (int i = 0; i < lst.Count; i++)
-                {
-                    if (lst[i].Equals(pj)) exits = true; break; ;
-                }
-               if(!exits) lst.Add(pj);
-            }
-        }
-        public ManualResetEvent Add(Control ctrl, IAnimation an)
-        {
-            if (this.hostExists(ctrl)) return new ManualResetEvent(true);
-            ControlScreener sc = new ControlScreener(ctrl);
-            Projectors.Projector  pj = new Projectors.Projector ();
-            var wait= pj.Inti(sc, an, true);
-            this.Add(pj);
-            return wait;
-        }
-        public ManualResetEvent Add(Control ctrl, IAnimation an, Boolean Show)
-        {
-            if (this.hostExists(ctrl)) return new ManualResetEvent(true);
-            ControlScreener sc = new ControlScreener(ctrl);
-            Projectors.Projector pj = new Projectors.Projector();
-            var wait = pj.Inti(sc, an, Show );
-            this.Add(pj);
-            return wait;
-        }
-
-        public void AddReflection(Control cntrl)
-        {
-            if (this.hostExists(cntrl)) return;
-            Projector pj = new Projector();
-            ReflectionOptmized rf = new ReflectionOptmized(cntrl.Parent.BackColor);
-           // rf.Position = Direction.Top;
-            pj.Inti(new Reflector(cntrl),rf, true);
-            this.Add(pj);            
-        }
-
-        public void AddReflection(Control cntrl,Direction dir)
-        {
-            if (this.hostExists(cntrl)) return;
-            Projector pj = new Projector();
-            ReflectionOptmized rf = new ReflectionOptmized(cntrl.Parent.BackColor);
-            rf.Position = dir ;
-            pj.Inti(new Reflector(cntrl), rf, true);
-            this.Add(pj);
-        }
-
-        private bool  hostExists(Object host)
-        {
-            bool exits = false;
-            lock (lst)
-            {                
-                for (int i = 0; i < lst.Count; i++)
-                {
-                   if (lst[i].getHost().Equals(host)) {exits =true ; break;}
-                }                
-            }
-            return exits;
-        }
-
-        public void RemoveAll()
-        {
-            lock (lst)
-            {
-                for (int i = 0; i < lst.Count; i++)
-                {                   
-                        lst[i].CleanMemoryFootprints();                   
-                }
-            }
-        }
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
@@ -149,44 +37,160 @@ namespace Animatrix
 
         }
 
+        public bool Started
+            { get { return timer1.Enabled; } }
+
+        public void Start()
+        {
+            this.timer1.Start();
+        }
+
+        public void Pause()
+        {
+            this.timer1.Stop();
+        }
+
+        private int _fps = 100;
+        public int FPS
+        {
+            get
+            {
+                return _fps;
+            }
+            set
+            {
+                timer1.Interval = 1000 / value;
+                _fps = value;
+            }
+        }
+
+
+        private bool Exits(Control host)
+        {
+           
+            bool exits = false;
+            if (host == null) return false;
+            if (host.IsDisposed) return false;
+            Object iHost;
+            lock (lst)
+            {
+                for (int i = 0; i < lst.Count; i++)
+                {
+                    iHost = lst[i].getHost();
+                    if (iHost != null)
+                        if (iHost.Equals(host))
+                        {
+                            exits = true;
+                            break;
+                        }
+
+                }
+            }
+            iHost = null;
+
+            return exits;
+        }
+
+        public void RemoveAll()
+        {
+            lock (lst)
+            {
+                for (int i = 0; i < lst.Count; i++)
+                {
+                    lst[i].leaveScreen();
+                    lst[i].CleanMemoryFootprints();
+                }
+                lst.Clear();
+            }
+        }
+
+        public void Add(IProjector pj)
+        {
+            lock (lst )
+            {
+                lst.Add(pj);
+            }
+        }
+
+        public ManualResetEvent Add(Control cntrl, IAnimation animation)
+        {
+            if (cntrl == null) return null;
+            if (cntrl.IsDisposed) return null ;
+            if (animation == null) return null ;
+            if (Exits(cntrl)) return null;
+            IScreener  cs = new ControlScreener  ( cntrl);
+            IProjector  pj = new Projector( cs,  animation);
+            this.Add( pj);
+            return ((Projector)pj).Wait;
+        }
+
+
+        public ManualResetEvent AddReflection(Control cntrl)
+        {
+            if (cntrl == null) return null;
+            if (cntrl.IsDisposed) return null;
+            if (Exits(cntrl)) return null;
+            IScreener cs = new Reflector (cntrl);
+            IProjector pj = new Projector(cs, new Reflection(cntrl.Parent.BackColor));
+            this.Add(pj);
+            return ((Projector)pj).Wait;
+        }
+
+        public ManualResetEvent AddReflection(Control cntrl, Reflection reflection)
+        {
+            if (cntrl == null) return null;
+            if (cntrl.IsDisposed) return null;
+            if (Exits(cntrl)) return null;
+            IScreener cs = new Reflector(cntrl);
+            IProjector pj = new Projector(cs, reflection);
+            this.Add(pj);
+            return ((Projector)pj).Wait;
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
-            try { removeCompleted(); }
-            catch (Exception) { }
-
-            try { moveNext(); }
-            catch (Exception ex) { Console.WriteLine(ex.Message); }
-            
-        }
-
-        private void removeCompleted()
-        {
-            lock (lst)
+            //timer1.Stop();
+            if (lst != null)
             {
-                for (int i = 0; i < lst.Count ; i++)
+                lock (lst)
                 {
-                    if (lst[i].Completed)
+                    IProjector pj;
+                    for (int i = 0; i < lst.Count; i++)
                     {
-                        lst[i].CleanMemoryFootprints();
-                        lst.RemoveAt(i);
+                        try
+                        {
+                              pj = lst[i];
+                        if (pj.Completed)
+                        {
+                            pj.leaveScreen();
+                            pj.CleanMemoryFootprints();
+                            lst.RemoveAt(i);
+                            --i;
+                        }
+                        else
+                        {
+                            pj.NextFrame();
+                        }
+                        }
+                        catch (Exception ex)
+                        {
+                            
+                            
+                        }
                     }
+                    pj = null;
                 }
+                //timer1.Start();
             }
         }
 
-        private void moveNext()
-        {
-            lock (lst)
-            {
-                for (int i = 0; i < lst.Count ; i++)
-                {
-                    if (!lst[i].Completed)
-                    {
-                        lst[i].NextFrame();
-                    }
-                }
-            }
-        }
 
+
+        public void Dispose()
+        {
+            RemoveAll();
+            timer1.Stop();
+            timer1.Dispose();
+        }
     }
 }
