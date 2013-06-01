@@ -1,5 +1,4 @@
-﻿
-using Animatrix.Animation;
+﻿using Animatrix.Animation;
 using Animatrix.Screener;
 using System;
 using System.Collections.Generic;
@@ -10,91 +9,155 @@ using System.Threading;
 
 namespace Animatrix.Projectors
 {
-  public   class Projector : IProjector 
+  public   class Projector : IProjector ,IDisposable 
     {
-      public bool Completed { get; set; }
-      IAnimation _animation;
-      IScreener _screener;
-      bool hvisible;
-      /// <summary>
-      /// Signal when Screener is removed.
-      /// </summary>
-    public   ManualResetEvent wait = new ManualResetEvent(false);
+        private IScreener _screen = null;
+        private IAnimation _animation = null;
+        private ManualResetEvent _wait = null;
+
+        public ManualResetEvent Wait
+        {
+            get
+            {
+                if (_wait == null)
+                    _wait = new ManualResetEvent(false);
+                return _wait;
+            }
+        }
+        public bool Completed
+        {
+            get
+            {
+                if (_animation != null) 
+                    return _animation.Completed;
+                else 
+                    return false ;
+            }
+        }
+       
+        
+        public Projector(IScreener screen,IAnimation animation)
+        {
+            // Check if we don't have null value.
+            if (screen == null || animation == null) return;
+            _screen = screen;
+            _animation = animation;
+            _screen.setPadding(_animation.getPadding(_screen.getHostSize()));
+             _wait = new ManualResetEvent(false);
+        }
 
 
 
 
-    public ManualResetEvent  Inti(IScreener sc, IAnimation ani, bool Show)
-    {
-        this._animation = ani;
-        this._screener = sc;
-        this.hvisible = Show;
-        //feeding
-        _screener.setPadding(_animation.getPadding(this._screener.getHostSize()));
-        _screener.Background = _screener.getBackground();
-        return wait;
-    }
-  
-
+        private AnimationFrameArgs e;
         public void NextFrame()
         {
+            // check if animation is completed then 
+            // ask IScreener to leave screen.
+            //
+            //else
+            //
+            // if screener is not in position then ask to do it.
+            // now compute nextframe with animation and pass
+            // it to screen and ask to draw again.
+
             if (_animation.Completed) return;
-            if (_screener.Ready)
+            if ( _animation.Started )
+            {               
+                _screen.coverTheHost();
+            }
+            if (true)
             {
+
                 Bitmap nxtfrm;
-                //_screener.update();
-                AnimationFrameArgs e = new AnimationFrameArgs();
-                e.Background = _screener.Background;
-                e.Forerground = _screener.Foreground;
-                e.Location = _screener.HostRelativeLocation;
-                e.ScreenerSize = _screener.getSize();
-                nxtfrm = _animation.nextFrame(e);
-                e = null;
-                _screener.imageToPaint = nxtfrm;
-                _screener.DrawAgain();
-                nxtfrm.Dispose();
-                if (_animation.Completed)
+                Size sz = _screen.getSize();
+                nxtfrm = new Bitmap(sz.Width, sz.Height);
+                Graphics g = Graphics.FromImage(nxtfrm);
+                if (e == null)
                 {
-                    this.Completed = true;
+                    e = new AnimationFrameArgs(ref _screen);
                 }
-            }
-            else
-            {
-                _screener.HostVisible_afterAnimation = this.hvisible;
-                _screener.coverTheHost();
-                
-            }
+               
+                e.graphics = g;
+                _animation.nextFrame(ref e);
+                _screen.DrawAgain();
+                g.Dispose();
+                g = null;
+                sz = Size.Empty;
+
             
+               
+                // Check if disposing nxtfrm dispose imagetoPaint also or not.
+                // if (_screen.imageToPaint != null)  _screen.imageToPaint.Dispose();
+                _screen.imageToPaint = nxtfrm ;
+            }
         }
-
-
-        public void CleanMemoryFootprints()
-        {
-            this.leaveScreen();
-            _animation.cleanMemoryFootprint();
-            _screener.cleanMemoryFootprint(); 
-            
-        }
-
 
         public void leaveScreen()
         {
-            _screener.leaveScreen();
+            _screen.leaveScreen();
+            if(e != null)
+             e.Dispose();
+             e = null;
         }
 
-
-        public bool  Equals(IProjector other)
+        public void CleanMemoryFootprints()
         {
-            Object host = other.getHost();
-            if (host == null) return false;
-            if (!(host.GetType().Equals(this.getHost().GetType()))) return false; // Check if both are Button or PictureBox etc.
-            return this.getHost().Equals(other.getHost());
-        }
+            if (_screen != null) 
+            { 
+                _screen.cleanMemoryFootprint();
+                _screen = null;
+            }
+           if (_animation != null)
+           {
+               _animation.cleanMemoryFootprint();
+               _animation = null;
+           }
+           if (_wait != null) 
+           { 
+               _wait  = null;
+           }
+           if (e != null)
+           { 
+               e.Dispose(); 
+               e = null; 
+           }
 
+        }
 
         public object getHost()
         {
-            return _screener.getHost();
+            if (_screen != null)
+                return _screen.getHost();
+            else
+                return null;
         }
+
+        public bool Equals(ref IProjector other)
+        {
+            if (other == null) return false ;
+
+            var otherhost = other.getHost();
+            if (otherhost == null) return false;
+
+            var thisHost = this.getHost();
+            if (thisHost == null) return false;
+
+            bool match = thisHost.Equals(otherhost);
+
+            thisHost = null;
+            otherhost = null;
+            return match;
+            
+
+        }
+
+
+        public void Dispose()
+        {
+            this.CleanMemoryFootprints();
+            Wait.Close();
+        }
+
     }
 }
